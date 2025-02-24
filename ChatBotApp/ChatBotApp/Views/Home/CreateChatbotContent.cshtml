@@ -1,0 +1,182 @@
+﻿
+@using ChatBotApp.Models
+@model ChatbotContent
+
+@{
+    ViewBag.Title = "Create Chatbot Content";
+}
+
+<div class="container mt-4">
+    <h2 class="text-center">Create Chatbot Content</h2>
+
+    @using (Html.BeginForm("CreateChatbotContent", "Home", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+    {
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(m => m.BotId)
+        <div class="form-group">
+            <label>Message Type</label>
+            @Html.DropDownListFor(m => m.MsgType, new SelectList(new[]
+            {
+                new { Value = "1", Text = "Text" },
+                new { Value = "2", Text = "Multiple Choice" },
+                new { Value = "3", Text = "Email" },
+                new { Value = "3", Text = "Link" }
+            }, "Value", "Text"), "Select Type", new { @class = "form-control", required = "required", id = "msgTypeDropdown" })
+        </div>
+
+        <div class="form-group">
+            <label>Content</label>
+            @Html.TextAreaFor(m => m.MsgContent, new { @class = "form-control", required = "required", @rows = 5 })
+        </div>
+
+        <!-- Multiple Choice Section (Initially Hidden) -->
+        <div class="form-group" id="multipleChoiceSection" style="display: none;">
+            <label>Choices</label>
+            <div class="input-group mb-2">
+                <input type="text" id="choiceInput" class="form-control" placeholder="Enter choice">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-primary" onclick="addChoice()">Add Choice</button>
+                </div>
+            </div>
+            <ul id="choiceList" class="list-group"></ul>
+            @Html.HiddenFor(m => m.MsgChoices, new { id = "MsgChoicesJson" })
+        </div>
+
+        if (ViewBag.ChatbotContents.Count > 0)
+        {
+            <!-- Display Condition Section -->
+            <div class="form-group">
+                <label>Display Condition</label>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="referenceContent">Reference Content</label>
+                        <select id="referenceContent" class="form-control">
+                            <option value="">Select a Content</option>
+                            @foreach (var content in ViewBag.ChatbotContents)
+                            {
+                                <option value="@content.Id" data-choices='@content.MsgChoices'>@content.MsgContent</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="conditionValueDropdown">Condition Value</label>
+                        <select id="conditionValueDropdown" class="form-control">
+                            <option value="">Select a Choice</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="hidden" id="DisplayCondition" name="DisplayCondition" value="@Model.DisplayCondition" />
+            </div>
+        }
+
+        <div class="mt-3 text-center">
+            <button type="submit" class="btn btn-primary">Create Message</button>
+            <a href="@Url.Action("ChatbotDetail", "Home", new { id = Model.Id})" class="btn btn-secondary">Back to List</a>
+        </div>
+    }
+</div>
+
+
+<!-- JavaScript for Handling Choices -->
+<script>
+    let choices = [];
+    let choiceId = 1;
+
+    function addChoice() {
+        let input = document.getElementById("choiceInput");
+        let value = input.value.trim();
+
+        if (value !== "") {
+            let newChoice = { id: choiceId++, value: value };
+            choices.push(newChoice);
+
+            let listItem = document.createElement("li");
+            listItem.className = "list-group-item d-flex justify-content-between align-items-center";
+            listItem.innerHTML = `${value}
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeChoice(${newChoice.id})">Remove</button>`;
+            listItem.id = "choice-" + newChoice.id;
+            document.getElementById("choiceList").appendChild(listItem);
+
+            // Update hidden input field with JSON data
+            document.getElementById("MsgChoicesJson").value = JSON.stringify(choices);
+            input.value = ""; // Clear input
+        }
+    }
+
+    function removeChoice(id) {
+        choices = choices.filter(choice => choice.id !== id);
+        document.getElementById("choice-" + id).remove();
+        document.getElementById("MsgChoicesJson").value = JSON.stringify(choices);
+    }
+
+    // Show/hide choices section based on selected message type
+    document.getElementById("msgTypeDropdown").addEventListener("change", function () {
+        let selectedValue = this.value;
+        let choiceSection = document.getElementById("multipleChoiceSection");
+        if (selectedValue == "2") {
+            choiceSection.style.display = "block";
+        } else {
+            choiceSection.style.display = "none";
+            choices = []; // Reset choices if not Multiple Choice
+            document.getElementById("choiceList").innerHTML = "";
+            document.getElementById("MsgChoicesJson").value = "";
+        }
+    });
+
+    function updateDisplayCondition() {
+        var referenceId = document.getElementById("referenceContent").value;
+        var conditionValue = document.getElementById("conditionValueDropdown").value;
+        var conditionJson = referenceId ? JSON.stringify({ "referenceContentId": referenceId, "value": conditionValue }) : "";
+
+        document.getElementById("DisplayCondition").value = conditionJson;
+    }
+
+    function populateChoicesDropdown() {
+        var selectedOption = document.getElementById("referenceContent").selectedOptions[0];
+        var choicesDropdown = document.getElementById("conditionValueDropdown");
+        choicesDropdown.innerHTML = '<option value="">Select a Choice</option>'; // Reset
+
+        var choicesData = selectedOption.getAttribute("data-choices");
+        if (choicesData) {
+            try {
+                var choices = JSON.parse(choicesData);
+                choices.forEach(function (choice) {
+                    var option = document.createElement("option");
+                    option.value = choice.id;
+                    option.textContent = choice.value;
+                    choicesDropdown.appendChild(option);
+                });
+            } catch (e) {
+                console.error("Invalid MsgChoices format", e);
+            }
+        }
+
+        updateDisplayCondition();
+    }
+
+    function populateDisplayCondition() {
+        var displayCondition = document.getElementById("DisplayCondition").value;
+
+        if (displayCondition) {
+            try {
+                var conditionData = JSON.parse(displayCondition);
+                if (conditionData.referenceContentId) {
+                    document.getElementById("referenceContent").value = conditionData.referenceContentId;
+                }
+                if (conditionData.value) {
+                    document.getElementById("conditionValueDropdown").value = conditionData.value;
+                }
+            } catch (e) {
+                console.error("Invalid DisplayCondition format", e);
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        populateDisplayCondition();
+        populateChoicesDropdown();
+    });
+
+    document.getElementById("referenceContent").addEventListener("change", populateChoicesDropdown);
+    document.getElementById("conditionValueDropdown").addEventListener("input", updateDisplayCondition);
+</script>

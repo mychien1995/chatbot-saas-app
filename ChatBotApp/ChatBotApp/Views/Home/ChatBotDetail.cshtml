@@ -1,0 +1,82 @@
+﻿
+@using ChatBotApp.Models
+@using ChatBotApp.Helpers
+@model ChatbotDetailViewModel
+
+@{
+    ViewBag.Title = Model.Chatbot.BotTitle;
+}
+
+<div class="container mt-4">
+    <h2 class="text-center">Chatbot Details</h2>
+    @using (Html.BeginForm("ChatBotDetail", "Home", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+    {
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        @Html.HiddenFor(m => m.Chatbot.Id) <!-- Hidden ID field -->
+
+        <div class="form-group">
+            <label>Bot ID (Read Only)</label>
+            @Html.TextBoxFor(m => m.Chatbot.BotId, new { @class = "form-control", @readonly = "readonly" })
+        </div>
+
+        <div class="form-group">
+            <label>Bot Title</label>
+            @Html.TextBoxFor(m => m.Chatbot.BotTitle, new { @class = "form-control", required = "required" })
+        </div>
+
+        <div class="form-group">
+            <label>Opening Message</label>
+            @Html.TextAreaFor(m => m.Chatbot.Opening, new { @class = "form-control", @rows = 5 })
+        </div>
+
+        <div class="form-group">
+            <label>Closing Message</label>
+            @Html.TextAreaFor(m => m.Chatbot.Closing, new { @class = "form-control", @rows = 5 })
+        </div>
+
+        <div class="mt-3 text-center">
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Back to List</a>
+        </div>
+    }
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="@Url.Action("CreateChatbotContent", "Home", new { botId = Model.Chatbot.Id })" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Chatbot Content
+        </a>
+    </div>
+
+    <h3 class="mt-4">Chatbot Contents</h3>
+    @if (Model.ChatbotContents.Count == 0)
+    {
+        <div class="alert alert-warning">No chatbot contents found.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Content Type</th>
+                        <th>Content</th>
+                        <th>Depends On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.ChatbotContents.Count; i++)
+                    {
+                        var content = Model.ChatbotContents[i];
+                        <tr>
+                            <td><a href="@Url.Action("DetailsContent", new { id = content.Id })">@(i+1)</a></td>
+                            <td>@ChatbotHelper.GetMessageTypeName(content.MsgType)</td>
+                            <td>@content.MsgContent</td>
+                            <td>@content.DependsOnText</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,13 @@
+.vs/
+bin
+obj
+**/bin/*
+**/obj/*
+*.user
+.vscode
+.sitecore/.cache
+.sitecore/package-cache
+.sitecore/user.json
+packages
+packages/
+*.zip

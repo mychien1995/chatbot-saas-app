@@ -1,0 +1,37 @@
+﻿
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+    <div class="card shadow p-4" style="width: 400px;">
+        <h2 class="text-center mb-4">Login to Chatbot CMS</h2>
+
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+        {
+            <div class="form-group mb-3">
+                <label for="userId" class="form-label">User ID:</label>
+                @Html.TextBox("userId", "", new { @class = "form-control", placeholder = "Enter your User ID", required = "required" })
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="userCode" class="form-label">User Code:</label>
+                @Html.Password("userCode", "", new { @class = "form-control", placeholder = "Enter your User Code", required = "required" })
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+            </div>
+
+            if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mt-3">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                </div>
+            }
+        }
+    </div>
+</div>
+
+

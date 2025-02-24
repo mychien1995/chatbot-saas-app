@@ -63,11 +63,11 @@ namespace ChatBotApp.Controllers
         }
 
         [HttpPost]
-        public ActionResult ChatBotDetail(Chatbot model)
+        public ActionResult ChatBotDetail(ChatbotDetailViewModel model)
         {
             if (ModelState.IsValid)
             {
-                DataRepo.UpdateChatbot(model.Id, model.BotTitle, model.Opening, model.Closing);
+                DataRepo.UpdateChatbot(model.Chatbot.Id, model.Chatbot.BotTitle, model.Chatbot.Opening, model.Chatbot.Closing);
                 TempData["SuccessMessage"] = "Chatbot details updated successfully!";
                 return RedirectToAction("Index", "Home");
             }
